@@ -21,3 +21,20 @@ export function filterByRange(plays: Play[], from: string | null, to: string | n
     return (!from || day >= from) && (!to || day <= to)
   })
 }
+
+const hourFormatters = new Map<string, Intl.DateTimeFormat>()
+
+// Local hour of the day, 0 to 23.
+export function localHour(ts: string, timeZone = TIME_ZONE): number {
+  let formatter = hourFormatters.get(timeZone)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', hourCycle: 'h23' })
+    hourFormatters.set(timeZone, formatter)
+  }
+  return Number(formatter.format(new Date(ts)))
+}
+
+// Day of the week of a local date like "2024-01-31": 0 is Monday, 6 is Sunday.
+export function weekday(day: string): number {
+  return (new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7
+}
