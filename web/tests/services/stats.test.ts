@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Play } from './history'
-import { dedupe, totals } from './stats'
+import type { Play } from '../../src/model/play'
+import { dedupe, totals } from '../../src/services/stats'
 
 const play = (over: Partial<Play>): Play => ({
   ts: '2024-01-01T00:00:00Z',

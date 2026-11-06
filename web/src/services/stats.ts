@@ -1,4 +1,4 @@
-import type { Play } from './history'
+import type { Play } from '../model/play'
 
 export const PLAY_THRESHOLD_MS = 30_000
 

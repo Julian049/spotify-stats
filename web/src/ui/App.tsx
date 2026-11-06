@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { parseHistory, type Play } from './history'
-import { dedupe, distinctValues, totals } from './stats'
+import type { Play } from '../model/play'
+import { parseHistory } from '../services/historyParser'
+import { dedupe, distinctValues, totals } from '../services/stats'
 
 export default function App() {
   const [plays, setPlays] = useState<Play[]>([])
