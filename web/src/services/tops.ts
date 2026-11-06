@@ -33,7 +33,9 @@ export function topByMonth(plays: Play[], by: 'artist' | 'album') {
   const months = new Map<string, Play[]>()
   for (const p of plays) {
     const month = localDate(p.ts).slice(0, 7)
-    months.set(month, [...(months.get(month) ?? []), p])
+    const list = months.get(month) ?? []
+    list.push(p)
+    months.set(month, list)
   }
 
   return [...months.keys()].sort().flatMap((month) => {
