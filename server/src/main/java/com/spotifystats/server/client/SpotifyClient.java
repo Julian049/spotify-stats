@@ -29,7 +29,7 @@ public class SpotifyClient {
     private final String clientSecret;
 
     private String token;
-    private Instant tokenExpiresAt = Instant.MIN;
+    private Instant tokenExpiresAt = Instant.EPOCH;
 
     public SpotifyClient(@Value("${spotify.client-id}") String clientId,
                          @Value("${spotify.client-secret}") String clientSecret) {
