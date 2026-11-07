@@ -3,6 +3,7 @@ import type { Play } from '../model/play'
 import { parseHistory } from '../services/historyParser'
 import { filterByRange } from '../services/dates'
 import { dedupe, distinctValues, totals } from '../services/stats'
+import MoreStats from './MoreStats'
 import { top, topByMonth, type Ranked, type TopBy } from '../services/tops'
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
               <li key={m.month}>{m.month}: {m.name}</li>
             ))}
           </ul>
+          <MoreStats plays={filtered} />
         </>
       )}
     </main>
