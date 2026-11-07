@@ -6,7 +6,7 @@ export type TopBy = 'artist' | 'track' | 'album'
 export type Ranked = { name: string; ms: number; plays: number }
 
 // Each kind of item has its own id (to group) and label (to show).
-const identity: Record<TopBy, (p: Play) => { id: string; label: string } | null> = {
+export const identity: Record<TopBy, (p: Play) => { id: string; label: string } | null> = {
   artist: (p) => (p.artist ? { id: p.artist, label: p.artist } : null),
   track: (p) => (p.uri ? { id: p.uri, label: `${p.track} - ${p.artist}` } : null),
   album: (p) => (p.album ? { id: `${p.artist}|${p.album}`, label: `${p.album} - ${p.artist}` } : null),
