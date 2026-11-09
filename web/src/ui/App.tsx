@@ -5,6 +5,7 @@ import { filterByRange } from '../services/dates'
 import { dedupe, distinctValues, totals } from '../services/stats'
 import MoreStats from './MoreStats'
 import { top, topByMonth, type Ranked, type TopBy } from '../services/tops'
+import { useImages } from './useImages'
 
 export default function App() {
   const [plays, setPlays] = useState<Play[]>([])
@@ -31,6 +32,19 @@ export default function App() {
 
   const filtered = filterByRange(plays, from || null, to || null)
   const t = totals(filtered)
+  const tops = (['artist', 'track', 'album'] as TopBy[]).map((by) => ({
+    by,
+    byTime: top(filtered, by, 'time', 10),
+    byPlays: top(filtered, by, 'plays', 10),
+  }))
+  const monthlyArtists = topByMonth(filtered, 'artist')
+  const monthlyAlbums = topByMonth(filtered, 'album')
+
+  // Tracks show their album cover; artists show the artist picture.
+  const ranked = (by: TopBy) => tops.filter((x) => x.by === by).flatMap((x) => [...x.byTime, ...x.byPlays])
+  const artistImages = useImages('artists', [...ranked('artist'), ...monthlyArtists].map((r) => r.uri))
+  const albumImages = useImages('albums', [...ranked('track'), ...ranked('album'), ...monthlyAlbums].map((r) => r.uri))
+  const imagesFor = (by: TopBy) => (by === 'artist' ? artistImages : albumImages)
 
   return (
     <main>
@@ -55,22 +69,22 @@ export default function App() {
             <li>reason_end: {distinctValues(plays, 'reasonEnd').join(', ')}</li>
             <li>platform: {distinctValues(plays, 'platform').join(', ')}</li>
           </ul>
-          {(['artist', 'track', 'album'] as TopBy[]).map((by) => (
+          {tops.map(({ by, byTime, byPlays }) => (
             <div key={by}>
               <h2>Top {by}s</h2>
-              <TopList title="By time" items={top(filtered, by, 'time', 10)} />
-              <TopList title="By plays" items={top(filtered, by, 'plays', 10)} />
+              <TopList title="By time" items={byTime} images={imagesFor(by)} />
+              <TopList title="By plays" items={byPlays} images={imagesFor(by)} />
             </div>
           ))}
           <h2>Top per month</h2>
           <ul>
-            {topByMonth(filtered, 'artist').map((m) => (
-              <li key={m.month}>{m.month}: {m.name}</li>
+            {monthlyArtists.map((m) => (
+              <li key={m.month}><Cover uri={m.uri} images={artistImages} />{m.month}: {m.name}</li>
             ))}
           </ul>
           <ul>
-            {topByMonth(filtered, 'album').map((m) => (
-              <li key={m.month}>{m.month}: {m.name}</li>
+            {monthlyAlbums.map((m) => (
+              <li key={m.month}><Cover uri={m.uri} images={albumImages} />{m.month}: {m.name}</li>
             ))}
           </ul>
           <MoreStats plays={filtered} />
@@ -80,15 +94,21 @@ export default function App() {
   )
 }
 
-function TopList({ title, items }: { title: string; items: Ranked[] }) {
+function TopList({ title, items, images }: { title: string; items: Ranked[]; images: Map<string, string> }) {
   return (
     <>
       <h3>{title}</h3>
       <ol>
         {items.map((item) => (
-          <li key={item.name}>{item.name} ({item.plays} plays, {Math.round(item.ms / 60_000)} min)</li>
+          <li key={item.name}><Cover uri={item.uri} images={images} />{item.name} ({item.plays} plays, {Math.round(item.ms / 60_000)} min)</li>
         ))}
       </ol>
     </>
   )
+}
+
+// Decorative (empty alt): the name is written right next to it.
+function Cover({ uri, images }: { uri: string | null; images: Map<string, string> }) {
+  const src = uri ? images.get(uri) : undefined
+  return src ? <img src={src} alt="" width={40} height={40} className="cover" /> : null
 }
