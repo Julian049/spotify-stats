@@ -1,0 +1,29 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="34" height="45" viewBox="0 0 34 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Background">
+<rect x="5" y="1" width="24" height="35" rx="12" fill="#2A2A2A"/>
+<g id="Overlay+Shadow" filter="url(#filter0_dd_0_29)">
+<rect x="5" y="1" width="24" height="35" rx="12" fill="white" fill-opacity="0.01" shape-rendering="crispEdges"/>
+</g>
+<path id="Icon" d="M16.25 19.75H17.75V16.6187L18.95 17.8188L20 16.75L17 13.75L14 16.75L15.0687 17.8L16.25 16.6187V19.75V19.75M12.5 22C12.0875 22 11.7344 21.8531 11.4406 21.5594C11.1469 21.2656 11 20.9125 11 20.5V8.5C11 8.0875 11.1469 7.73438 11.4406 7.44063C11.7344 7.14688 12.0875 7 12.5 7H18.5L23 11.5V20.5C23 20.9125 22.8531 21.2656 22.5594 21.5594C22.2656 21.8531 21.9125 22 21.5 22H12.5V22M17.75 12.25V8.5H12.5V8.5V8.5V20.5V20.5V20.5H21.5V20.5V20.5V12.25H17.75V12.25M12.5 8.5V8.5V12.25V12.25V8.5V12.25V12.25V20.5V20.5V20.5V20.5V20.5V20.5V8.5V8.5V8.5V8.5" fill="#E5E2E1"/>
+</g>
+<defs>
+<filter id="filter0_dd_0_29" x="0" y="0" width="34" height="45" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feMorphology radius="2" operator="erode" in="SourceAlpha" result="effect1_dropShadow_0_29"/>
+<feOffset dy="2"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_29"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feMorphology radius="1" operator="erode" in="SourceAlpha" result="effect2_dropShadow_0_29"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="3"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
+<feBlend mode="normal" in2="effect1_dropShadow_0_29" result="effect2_dropShadow_0_29"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_0_29" result="shape"/>
+</filter>
+</defs>
+</svg>
