@@ -3,7 +3,8 @@ import { localDate } from './dates'
 import { PLAY_THRESHOLD_MS } from './stats'
 
 export type TopBy = 'artist' | 'track' | 'album'
-export type Ranked = { name: string; ms: number; plays: number }
+// uri: one track of the group, used to look up its album or artist image.
+export type Ranked = { name: string; ms: number; plays: number; uri: string | null }
 
 // Each kind of item has its own id (to group) and label (to show).
 export const identity: Record<TopBy, (p: Play) => { id: string; label: string } | null> = {
@@ -18,7 +19,8 @@ export function top(plays: Play[], by: TopBy, sortBy: 'time' | 'plays', n: numbe
   for (const p of plays) {
     const item = identity[by](p)
     if (!item) continue
-    const group = groups.get(item.id) ?? { name: item.label, ms: 0, plays: 0 }
+    const group = groups.get(item.id) ?? { name: item.label, ms: 0, plays: 0, uri: null }
+    group.uri ??= p.uri
     group.ms += p.msPlayed
     if (p.msPlayed >= PLAY_THRESHOLD_MS) group.plays++
     groups.set(item.id, group)
