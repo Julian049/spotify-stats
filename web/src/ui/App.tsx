@@ -1,114 +1,103 @@
-import { useState } from 'react'
-import type { Play } from '../model/play'
+import { useMemo, useRef, useState } from 'react'
+import { filterByRange, localDate } from '../services/dates'
+import { demoPlays } from '../services/demo'
 import { parseHistory } from '../services/historyParser'
-import { filterByRange } from '../services/dates'
-import { dedupe, distinctValues, totals } from '../services/stats'
-import MoreStats from './MoreStats'
-import { top, topByMonth, type Ranked, type TopBy } from '../services/tops'
-import { useImages } from './useImages'
+import { presetRange, type Preset, type Range } from '../services/period'
+import { dedupe, totals } from '../services/stats'
+import Header, { type View } from './Header'
+import HabitsView from './HabitsView'
+import PeriodBar from './PeriodBar'
+import SummaryView from './SummaryView'
+import TopsView from './TopsView'
+import UploadView, { type LoadedFile } from './UploadView'
 
 export default function App() {
-  const [plays, setPlays] = useState<Play[]>([])
-  const [duplicates, setDuplicates] = useState(0)
-  const [error, setError] = useState<string | null>(null)
-  const [from, setFrom] = useState('')
-  const [to, setTo] = useState('')
+  const [files, setFiles] = useState<LoadedFile[]>([])
+  const [view, setView] = useState<View>('upload')
+  const [preset, setPreset] = useState<Preset | null>('all')
+  const [range, setRange] = useState<Range>({ from: null, to: null })
+  const nextId = useRef(1)
 
-  async function onFiles(files: FileList | null) {
-    if (!files) return
-    setError(null)
-    try {
-      const all: Play[] = []
-      for (const file of files) {
-        all.push(...parseHistory(await file.text()))
-      }
-      const unique = dedupe(all)
-      setDuplicates(all.length - unique.length)
-      setPlays(unique)
-    } catch {
-      setError('Could not read the files. Are they Spotify history JSON files?')
+  const plays = useMemo(() => dedupe(files.flatMap((f) => f.plays ?? [])), [files])
+  const all = useMemo(() => totals(plays), [plays])
+  const firstDay = all.from ? localDate(all.from) : ''
+  const lastDay = all.to ? localDate(all.to) : ''
+  const filtered = useMemo(() => filterByRange(plays, range.from, range.to), [plays, range])
+
+  function addFiles(list: FileList) {
+    const added = [...list].map((file) => ({ file, id: nextId.current++ }))
+    setFiles((prev) => [...prev, ...added.map(({ file, id }) => ({ id, name: file.name, size: file.size, plays: null, error: false }))])
+    for (const { file, id } of added) {
+      file
+        .text()
+        .then((text) => {
+          const parsed = parseHistory(text)
+          if (parsed.length === 0) throw new Error('No plays in this file')
+          return parsed
+        })
+        .then(
+          (parsed) => setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, plays: parsed } : f))),
+          () => setFiles((prev) => prev.map((f) => (f.id === id ? { ...f, error: true } : f))),
+        )
     }
   }
 
-  const filtered = filterByRange(plays, from || null, to || null)
-  const t = totals(filtered)
-  const tops = (['artist', 'track', 'album'] as TopBy[]).map((by) => ({
-    by,
-    byTime: top(filtered, by, 'time', 10),
-    byPlays: top(filtered, by, 'plays', 10),
-  }))
-  const monthlyArtists = topByMonth(filtered, 'artist')
-  const monthlyAlbums = topByMonth(filtered, 'album')
+  function choosePreset(p: Preset) {
+    setPreset(p)
+    setRange(presetRange(p, lastDay))
+  }
 
-  // Tracks show their album cover; artists show the artist picture.
-  const ranked = (by: TopBy) => tops.filter((x) => x.by === by).flatMap((x) => [...x.byTime, ...x.byPlays])
-  const artistImages = useImages('artists', [...ranked('artist'), ...monthlyArtists].map((r) => r.uri))
-  const albumImages = useImages('albums', [...ranked('track'), ...ranked('album'), ...monthlyAlbums].map((r) => r.uri))
-  const imagesFor = (by: TopBy) => (by === 'artist' ? artistImages : albumImages)
+  function navigate(next: View) {
+    setView(next)
+    window.scrollTo(0, 0)
+  }
 
-  return (
-    <main>
-      <h1>Spotify Stats</h1>
-      <input type="file" accept=".json" multiple onChange={(e) => onFiles(e.target.files)} />
-      {error && <p>{error}</p>}
-      {plays.length > 0 && (
-        <>
-          <p>
-            From <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-            {' '}to <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </p>
-          <ul>
-            <li>Plays: {t.plays}</li>
-            <li>Listened: {Math.round(t.listenedMs / 60_000)} min</li>
-            <li>Tracks: {t.tracks}</li>
-            <li>Artists: {t.artists}</li>
-            <li>Albums: {t.albums}</li>
-            <li>From {t.from} to {t.to}</li>
-            <li>Duplicates removed: {duplicates}</li>
-            <li>reason_start: {distinctValues(plays, 'reasonStart').join(', ')}</li>
-            <li>reason_end: {distinctValues(plays, 'reasonEnd').join(', ')}</li>
-            <li>platform: {distinctValues(plays, 'platform').join(', ')}</li>
-          </ul>
-          {tops.map(({ by, byTime, byPlays }) => (
-            <div key={by}>
-              <h2>Top {by}s</h2>
-              <TopList title="By time" items={byTime} images={imagesFor(by)} />
-              <TopList title="By plays" items={byPlays} images={imagesFor(by)} />
-            </div>
-          ))}
-          <h2>Top per month</h2>
-          <ul>
-            {monthlyArtists.map((m) => (
-              <li key={m.month}><Cover uri={m.uri} images={artistImages} />{m.month}: {m.name}</li>
-            ))}
-          </ul>
-          <ul>
-            {monthlyAlbums.map((m) => (
-              <li key={m.month}><Cover uri={m.uri} images={albumImages} />{m.month}: {m.name}</li>
-            ))}
-          </ul>
-          <MoreStats plays={filtered} />
-        </>
-      )}
-    </main>
+  function analyze() {
+    setPreset('all')
+    setRange({ from: null, to: null })
+    navigate('summary')
+  }
+
+  if (view === 'upload' || plays.length === 0) {
+    return (
+      <>
+        <Header view="upload" onNavigate={navigate} />
+        <UploadView
+          files={files}
+          totalPlays={all.plays}
+          onAdd={addFiles}
+          onRemove={(id) => setFiles((prev) => prev.filter((f) => f.id !== id))}
+          onClear={() => setFiles([])}
+          onDemo={() => {
+            setFiles([{ id: nextId.current++, name: 'Datos de ejemplo', size: 0, plays: demoPlays(), error: false }])
+            analyze()
+          }}
+          onAnalyze={analyze}
+        />
+      </>
+    )
+  }
+
+  const periodBar = (
+    <PeriodBar
+      preset={preset}
+      range={range}
+      firstDay={firstDay}
+      lastDay={lastDay}
+      onPreset={choosePreset}
+      onCustom={(r) => {
+        setPreset(null)
+        setRange(r)
+      }}
+    />
   )
-}
 
-function TopList({ title, items, images }: { title: string; items: Ranked[]; images: Map<string, string> }) {
   return (
     <>
-      <h3>{title}</h3>
-      <ol>
-        {items.map((item) => (
-          <li key={item.name}><Cover uri={item.uri} images={images} />{item.name} ({item.plays} plays, {Math.round(item.ms / 60_000)} min)</li>
-        ))}
-      </ol>
+      <Header view={view} onNavigate={navigate} />
+      {view === 'summary' && <SummaryView plays={filtered} allPlays={plays} range={range} periodBar={periodBar} onNavigate={navigate} />}
+      {view === 'tops' && <TopsView plays={filtered} periodBar={periodBar} />}
+      {view === 'habits' && <HabitsView plays={filtered} periodBar={periodBar} />}
     </>
   )
-}
-
-// Decorative (empty alt): the name is written right next to it.
-function Cover({ uri, images }: { uri: string | null; images: Map<string, string> }) {
-  const src = uri ? images.get(uri) : undefined
-  return src ? <img src={src} alt="" width={40} height={40} className="cover" /> : null
 }
