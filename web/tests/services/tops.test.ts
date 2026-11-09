@@ -40,6 +40,11 @@ describe('top', () => {
     const [a] = top([play({ msPlayed: 10_000 })], 'artist', 'time', 1)
     expect([a.plays, a.ms]).toEqual([0, 10_000])
   })
+
+  it('keeps the first track uri of the group, skipping plays without one', () => {
+    const [a] = top([play({ uri: null }), play({ uri: 'spotify:track:x' }), play({ uri: 'spotify:track:y' })], 'artist', 'time', 1)
+    expect(a.uri).toBe('spotify:track:x')
+  })
 })
 
 describe('topByMonth', () => {
