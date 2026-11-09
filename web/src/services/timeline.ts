@@ -58,14 +58,15 @@ export function longestStreak(plays: Play[]) {
 
 // RF-7: the track with the most plays in a single day.
 export function obsession(plays: Play[]) {
-  const counts = new Map<string, { name: string; day: string; plays: number }>()
-  let best: { name: string; day: string; plays: number } | null = null
+  type Entry = { name: string; track: string; artist: string | null; day: string; plays: number }
+  const counts = new Map<string, Entry>()
+  let best: Entry | null = null
 
   for (const p of plays) {
     if (!p.uri || p.msPlayed < PLAY_THRESHOLD_MS) continue
     const day = localDate(p.ts)
     const key = `${day}|${p.uri}`
-    const entry = counts.get(key) ?? { name: `${p.track} - ${p.artist}`, day, plays: 0 }
+    const entry = counts.get(key) ?? { name: `${p.track} - ${p.artist}`, track: p.track, artist: p.artist, day, plays: 0 }
     entry.plays++
     counts.set(key, entry)
     if (!best || entry.plays > best.plays) best = entry

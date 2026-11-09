@@ -60,6 +60,6 @@ describe('obsession', () => {
       play({ uri: 'b', track: 'Two' }),
       play({ uri: 'a', track: 'One', ts: '2024-01-16T12:00:00Z' }),
     ]
-    expect(obsession(plays)).toMatchObject({ name: 'Two - A', plays: 2 })
+    expect(obsession(plays)).toMatchObject({ name: 'Two - A', track: 'Two', artist: 'A', plays: 2 })
   })
 })
