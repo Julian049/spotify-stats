@@ -59,3 +59,10 @@ describe('topByMonth', () => {
     ])
   })
 })
+
+describe('top fields', () => {
+  it('keeps title, artist and album apart for a track', () => {
+    const [t] = top([play({ track: 'Song', artist: 'Singer', album: 'Record' })], 'track', 'plays', 1)
+    expect([t.title, t.artist, t.album]).toEqual(['Song', 'Singer', 'Record'])
+  })
+})

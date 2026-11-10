@@ -1,0 +1,108 @@
+.period {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.presets {
+  display: flex;
+  padding: 4px;
+  border-radius: 9999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+}
+
+.presets button {
+  border: 0;
+  background: none;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.presets button:hover {
+  color: var(--text);
+}
+
+.presets button[aria-pressed='true'] {
+  background: var(--pill-active);
+  color: #000;
+}
+
+.range {
+  position: relative;
+}
+
+.range-button {
+  height: 40px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--surface-2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.range-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 5;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  min-width: 240px;
+}
+
+.range-popover label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.range-popover input {
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+}
+
+@media (max-width: 860px) {
+  .period {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .presets {
+    overflow-x: auto;
+  }
+
+  .range-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .range-popover {
+    left: 0;
+  }
+}

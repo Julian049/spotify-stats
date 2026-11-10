@@ -4,7 +4,22 @@ import { PLAY_THRESHOLD_MS } from './stats'
 
 export type TopBy = 'artist' | 'track' | 'album'
 // uri: one track of the group, used to look up its album or artist image.
-export type Ranked = { name: string; ms: number; plays: number; uri: string | null }
+// title, artist and album come from the first play of the group, to show them on separate lines.
+export type Ranked = {
+  name: string
+  title: string
+  artist: string | null
+  album: string | null
+  ms: number
+  plays: number
+  uri: string | null
+}
+
+const titles: Record<TopBy, (p: Play) => string> = {
+  artist: (p) => p.artist ?? '',
+  track: (p) => p.track,
+  album: (p) => p.album ?? '',
+}
 
 // Each kind of item has its own id (to group) and label (to show).
 export const identity: Record<TopBy, (p: Play) => { id: string; label: string } | null> = {
@@ -19,7 +34,15 @@ export function top(plays: Play[], by: TopBy, sortBy: 'time' | 'plays', n: numbe
   for (const p of plays) {
     const item = identity[by](p)
     if (!item) continue
-    const group = groups.get(item.id) ?? { name: item.label, ms: 0, plays: 0, uri: null }
+    const group = groups.get(item.id) ?? {
+      name: item.label,
+      title: titles[by](p),
+      artist: p.artist,
+      album: p.album,
+      ms: 0,
+      plays: 0,
+      uri: null,
+    }
     group.uri ??= p.uri
     group.ms += p.msPlayed
     if (p.msPlayed >= PLAY_THRESHOLD_MS) group.plays++
