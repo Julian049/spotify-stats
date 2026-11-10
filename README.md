@@ -2,6 +2,22 @@
 
 Upload your Spotify *Extended Streaming History* JSON files and get a report of your listening stats. Files are read in the browser and never leave your computer.
 
+## Get your data
+
+1. Go to your Spotify [Privacy settings](https://www.spotify.com/account/privacy/) and request **Extended streaming history**.
+2. Spotify emails you a ZIP within a few days (up to 30). Unzip it.
+3. Drop the `Streaming_History_Audio_*.json` files into the app. You can add several at once.
+
+No data yet? Press the demo button on the upload screen to try the app with sample plays.
+
+## What you get
+
+- **Summary**: listening time, top artists and songs, and a day × hour heatmap.
+- **Rankings**: artist and album of each month, plus all-time top albums, artists and songs.
+- **Habits**: when you listen, which platforms you use and how often you skip.
+
+Every screen can be filtered by period.
+
 ## Run
 
 ```
