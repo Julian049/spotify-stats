@@ -1,0 +1,9 @@
+# Keep the build context small and never send secrets or local builds to Docker.
+**/node_modules
+**/dist
+**/target
+**/.env
+**/.env.*
+.git
+.idea
+outgit
