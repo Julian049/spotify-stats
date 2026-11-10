@@ -119,6 +119,7 @@
 
 .month-card {
   flex: 0 0 256px;
+  min-width: 0; /* a long one-line title must be cut with "…", not widen the card */
   padding: 16px 16px 20px;
   border-radius: var(--radius);
   background: var(--surface-2);
@@ -221,6 +222,7 @@
 
 .album-card {
   flex: 0 0 180px;
+  min-width: 0; /* same: long titles must not widen the card */
   padding: 12px;
   border-radius: 4px;
   background: var(--surface);
