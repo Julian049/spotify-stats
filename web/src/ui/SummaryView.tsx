@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useState, type ReactNode } from 'react'
 import activity from '../assets/icons/activity.svg'
 import arrowRight from '../assets/icons/arrow-right.svg'
 import chevronRight from '../assets/icons/chevron-right.svg'
@@ -32,6 +32,7 @@ type Props = {
   range: Range
   periodBar: ReactNode
   onNavigate: (view: View) => void
+  onLoading: (loading: boolean) => void
 }
 
 const DAY_LETTERS = ['L', 'M', 'X', 'J', 'V', 'S', 'D']
@@ -44,7 +45,7 @@ function greeting(hour: number) {
   return 'Buenas noches'
 }
 
-export default function SummaryView({ plays, allPlays, range, periodBar, onNavigate }: Props) {
+export default function SummaryView({ plays, allPlays, range, periodBar, onNavigate, onLoading }: Props) {
   const [songsShown, setSongsShown] = useState(SONGS_STEP)
   const [hour] = useState(() => new Date().getHours())
 
@@ -64,8 +65,13 @@ export default function SummaryView({ plays, allPlays, range, periodBar, onNavig
     if (prevMs > 0) change = t.listenedMs / prevMs - 1
   }
 
-  const artistImages = useImages('artists', topArtists.map((a) => a.uri))
-  const albumImages = useImages('albums', songs.slice(0, songsShown).map((s) => s.uri))
+  const { images: artistImages, loading: artistsLoading } = useImages('artists', topArtists.map((a) => a.uri))
+  const { images: albumImages, loading: albumsLoading } = useImages('albums', songs.slice(0, songsShown).map((s) => s.uri))
+  // Layout effect: runs before the browser paints, so gray placeholders never flash.
+  useLayoutEffect(() => {
+    onLoading(artistsLoading || albumsLoading)
+    return () => onLoading(false)
+  }, [artistsLoading, albumsLoading, onLoading])
 
   return (
     <main className="page summary">
