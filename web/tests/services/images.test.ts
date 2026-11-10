@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { fetchImages } from '../../src/services/images'
+import { cachedImages, fetchImages } from '../../src/services/images'
 
 const id = (n: number) => String(n).padStart(22, 'a')
 const uri = (n: number) => `spotify:track:${id(n)}`
@@ -41,9 +41,26 @@ describe('fetchImages', () => {
     expect(fetch).not.toHaveBeenCalled()
   })
 
-  it('returns no images when the server fails', async () => {
+  // The cache lives for the whole file, so each test below uses tracks no other test asked for.
+  it('returns no images when the server fails, and asks again next time', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 500 })))
     vi.spyOn(console, 'warn').mockImplementation(() => {})
-    expect(await fetchImages('albums', [uri(1)])).toEqual(new Map())
+    expect(await fetchImages('albums', [uri(100)])).toEqual(new Map())
+    expect(cachedImages('albums', [uri(100)])).toBeNull()
+
+    const fetch = mockServer()
+    expect((await fetchImages('albums', [uri(100)])).size).toBe(1)
+    expect(fetch).toHaveBeenCalledOnce()
+  })
+
+  it('asks only for tracks it has not seen, also remembering tracks without image', async () => {
+    const fetch = vi.fn(async (_url: string, _init?: RequestInit) => Response.json({ [id(201)]: 'img-201' })) // 202 has no image
+    vi.stubGlobal('fetch', fetch)
+    await fetchImages('artists', [uri(201), uri(202)])
+    expect(cachedImages('artists', [uri(201), uri(202), null])).toEqual(new Map([[uri(201), 'img-201']]))
+
+    await fetchImages('artists', [uri(201), uri(202), uri(203)])
+    expect(JSON.parse(fetch.mock.calls[1][1]!.body as string)).toEqual({ tracks: [id(203)] })
+    expect(cachedImages('albums', [uri(201)])).toBeNull() // albums and artists are cached apart
   })
 })

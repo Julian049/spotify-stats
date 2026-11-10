@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useLayoutEffect, useState, type ReactNode } from 'react'
 import award from '../assets/icons/award.svg'
 import chevronLeft from '../assets/icons/chevron-left.svg'
 import chevronRight from '../assets/icons/chevron-right.svg'
@@ -16,10 +16,10 @@ import { hours, minutes, monthAbbr, monthLabel, monthName, num, percent } from '
 import { useImages } from './useImages'
 import './tops.css'
 
-type Props = { plays: Play[]; periodBar: ReactNode }
+type Props = { plays: Play[]; periodBar: ReactNode; onLoading: (loading: boolean) => void }
 type Metric = 'time' | 'plays'
 
-export default function TopsView({ plays, periodBar }: Props) {
+export default function TopsView({ plays, periodBar, onLoading }: Props) {
   const years = [...new Set(plays.map((p) => localDate(p.ts).slice(0, 4)))].sort()
   const [chosenYear, setYear] = useState<string | null>(null)
   // If the period changes and the chosen year is no longer there, fall back to the latest one.
@@ -38,12 +38,17 @@ export default function TopsView({ plays, periodBar }: Props) {
   const artists = top(plays, 'artist', artistMetric, 10)
   const songs = top(plays, 'track', songMetric, 10)
 
-  const artistImages = useImages('artists', artists.map((a) => a.uri))
-  const albumImages = useImages('albums', [
+  const { images: artistImages, loading: artistsLoading } = useImages('artists', artists.map((a) => a.uri))
+  const { images: albumImages, loading: albumsLoading } = useImages('albums', [
     ...[...monthAlbums.values()].map((m) => m.uri),
     ...albums.map((a) => a.uri),
     ...songs.map((s) => s.uri),
   ])
+  // Layout effect: runs before the browser paints, so gray placeholders never flash.
+  useLayoutEffect(() => {
+    onLoading(artistsLoading || albumsLoading)
+    return () => onLoading(false)
+  }, [artistsLoading, albumsLoading, onLoading])
   const image = (images: Map<string, string>, uri: string | null) => (uri ? images.get(uri) : undefined)
   const yearIndex = years.indexOf(year ?? '')
 

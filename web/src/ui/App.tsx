@@ -5,6 +5,7 @@ import { parseHistory } from '../services/historyParser'
 import { presetRange, type Preset, type Range } from '../services/period'
 import { dedupe, totals } from '../services/stats'
 import Header, { type View } from './Header'
+import Loader from './Loader'
 import HabitsView from './HabitsView'
 import PeriodBar from './PeriodBar'
 import SummaryView from './SummaryView'
@@ -16,6 +17,8 @@ export default function App() {
   const [view, setView] = useState<View>('upload')
   const [preset, setPreset] = useState<Preset | null>('all')
   const [range, setRange] = useState<Range>({ from: null, to: null })
+  const [switching, setSwitching] = useState(false)
+  const [imagesLoading, setImagesLoading] = useState(false)
   const nextId = useRef(1)
 
   const plays = useMemo(() => dedupe(files.flatMap((f) => f.plays ?? [])), [files])
@@ -42,14 +45,32 @@ export default function App() {
     }
   }
 
+  // Shows the loader first and applies the change after the browser painted it: the next screen's
+  // stats block the page for a moment, and without this the click would look frozen.
+  function withLoader(change: () => void) {
+    setSwitching(true)
+    requestAnimationFrame(() =>
+      setTimeout(() => {
+        change()
+        setSwitching(false)
+      }),
+    )
+  }
+
   function choosePreset(p: Preset) {
-    setPreset(p)
-    setRange(presetRange(p, lastDay))
+    withLoader(() => {
+      setPreset(p)
+      setRange(presetRange(p, lastDay))
+    })
   }
 
   function navigate(next: View) {
-    setView(next)
-    window.scrollTo(0, 0)
+    const go = () => {
+      setView(next)
+      window.scrollTo(0, 0)
+    }
+    if (next === 'upload') go()
+    else withLoader(go)
   }
 
   function analyze() {
@@ -74,6 +95,7 @@ export default function App() {
           }}
           onAnalyze={analyze}
         />
+        {switching && <Loader />}
       </>
     )
   }
@@ -85,19 +107,24 @@ export default function App() {
       firstDay={firstDay}
       lastDay={lastDay}
       onPreset={choosePreset}
-      onCustom={(r) => {
-        setPreset(null)
-        setRange(r)
-      }}
+      onCustom={(r) =>
+        withLoader(() => {
+          setPreset(null)
+          setRange(r)
+        })
+      }
     />
   )
 
   return (
     <>
       <Header view={view} onNavigate={navigate} />
-      {view === 'summary' && <SummaryView plays={filtered} allPlays={plays} range={range} periodBar={periodBar} onNavigate={navigate} />}
-      {view === 'tops' && <TopsView plays={filtered} periodBar={periodBar} />}
+      {view === 'summary' && (
+        <SummaryView plays={filtered} allPlays={plays} range={range} periodBar={periodBar} onNavigate={navigate} onLoading={setImagesLoading} />
+      )}
+      {view === 'tops' && <TopsView plays={filtered} periodBar={periodBar} onLoading={setImagesLoading} />}
       {view === 'habits' && <HabitsView plays={filtered} periodBar={periodBar} />}
+      {(switching || imagesLoading) && <Loader />}
     </>
   )
 }

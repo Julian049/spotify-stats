@@ -65,7 +65,8 @@ const STEPS = [
 export default function UploadView({ files, totalPlays, onAdd, onRemove, onClear, onDemo, onAnalyze }: Props) {
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
-  const ready = files.some((f) => f.plays && f.plays.length > 0) && files.every((f) => f.plays || f.error)
+  const reading = files.filter((f) => !f.plays && !f.error).length
+  const ready = files.some((f) => f.plays && f.plays.length > 0) && reading === 0
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault()
@@ -158,11 +159,15 @@ export default function UploadView({ files, totalPlays, onAdd, onRemove, onClear
 
             <div className="analyze-row">
               <div className="analyze-info">
-                <span className="dot big" />
-                <div>
+                {reading > 0 ? <span className="mini-spinner" aria-hidden="true" /> : <span className="dot big" />}
+                <div role="status">
                   <p className="analyze-total">{num(totalPlays)} reproducciones en total</p>
                   <p className="muted small">
-                    {ready ? 'Todo listo para armar tu panel de estadísticas.' : 'Esperando archivos válidos…'}
+                    {reading > 0
+                      ? `Leyendo archivos… ${files.length - reading} de ${files.length} listos`
+                      : ready
+                        ? 'Todo listo para armar tu panel de estadísticas.'
+                        : 'Ningún archivo válido todavía.'}
                   </p>
                 </div>
               </div>
