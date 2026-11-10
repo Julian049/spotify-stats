@@ -1,63 +1,142 @@
-# Spotify Stats
+<h1 align="center">Spotify Stats</h1>
 
-Upload your Spotify *Extended Streaming History* JSON files and get a report of your listening stats. Files are read in the browser and never leave your computer.
+<p align="center">
+  <em>Tu historial completo de Spotify convertido en estadísticas, sin que tus datos salgan de tu navegador.</em>
+</p>
 
-## Get your data
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-1DB954?style=flat-square" alt="React 19">
+  <img src="https://img.shields.io/badge/TypeScript-7-1DB954?style=flat-square" alt="TypeScript 7">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.1-1DB954?style=flat-square" alt="Spring Boot 4.1">
+  <img src="https://img.shields.io/badge/Java-21-1DB954?style=flat-square" alt="Java 21">
+  <img src="https://img.shields.io/badge/Docker-listo-1DB954?style=flat-square" alt="Docker">
+</p>
 
-1. Go to your Spotify [Privacy settings](https://www.spotify.com/account/privacy/) and request **Extended streaming history**.
-2. Spotify emails you a ZIP within a few days (up to 30). Unzip it.
-3. Drop the `Streaming_History_Audio_*.json` files into the app. You can add several at once.
+<p align="center">
+  <a href="#funciones">Funciones</a> •
+  <a href="#consigue-tus-datos">Consigue tus datos</a> •
+  <a href="#cómo-está-hecha">Cómo está hecha</a> •
+  <a href="#desarrollo">Desarrollo</a> •
+  <a href="#despliegue">Despliegue</a>
+</p>
 
-No data yet? Press the demo button on the upload screen to try the app with sample plays.
+<p align="center">
+  <img src=".github/readme/summary.png" width="49%" alt="Resumen general">
+  <img src=".github/readme/tops.png" width="49%" alt="Top artistas y canciones">
+  <img src=".github/readme/habits.png" width="49%" alt="Hábitos de escucha">
+  <img src=".github/readme/upload.png" width="49%" alt="Carga de archivos">
+</p>
 
-## What you get
+---
 
-- **Summary**: listening time, top artists and songs, and a day × hour heatmap.
-- **Rankings**: artist and album of each month, plus all-time top albums, artists and songs.
-- **Habits**: when you listen, which platforms you use and how often you skip.
+**Spotify Stats** lee los archivos del *historial de streaming ampliado* que Spotify entrega a cada usuario y calcula qué, cuándo y cómo escuchas. Todo el cálculo ocurre en el navegador: los archivos nunca se suben a ningún servidor. Lo único que viaja es la lista de canciones de las que se piden portadas e imágenes de artistas.
 
-Every screen can be filtered by period.
+## Funciones
 
-## Run
+### 📊 Resumen general
+
+- Tiempo total escuchado, reproducciones, artistas distintos y canción más repetida.
+- Artistas más escuchados y top de canciones del período.
+- Mapa de actividad por día de la semana y hora.
+
+### 🏆 Top artistas y canciones
+
+- Artista y álbum de cada mes en una línea de tiempo, con el mes pico.
+- Top histórico de álbumes, y top 10 de artistas y canciones por tiempo o por reproducciones.
+
+### 🎧 Hábitos de escucha
+
+- Tasa de saltos: saltos inmediatos, tempranos y la canción y el artista más saltados.
+- Escucha sin conexión frente a en línea, y tu récord offline.
+- Plataformas y dispositivos, patrones y curiosidades.
+
+### 🗓️ Períodos y privacidad
+
+- Todas las pantallas se filtran por las últimas 4 semanas, los últimos 6 meses, un año, todo el historial o un rango propio.
+- Varios archivos a la vez; los datos se procesan en el navegador.
+- Botón de **datos de ejemplo** para probar la app sin un historial propio.
+
+## Consigue tus datos
+
+1. En la [configuración de privacidad de Spotify](https://www.spotify.com/account/privacy/), pide el **historial de streaming ampliado**.
+2. Spotify envía un ZIP por correo, normalmente en unos días (puede tardar hasta 30). Descomprímelo.
+3. Arrastra a la app los archivos `Streaming_History_Audio_*.json`.
+
+## Cómo está hecha
+
+| Pieza | Tecnología |
+| --- | --- |
+| Web | React 19 y TypeScript, empaquetada con Vite |
+| Pruebas web | Vitest |
+| Servidor de imágenes | Spring Boot 4.1 sobre Java 21 |
+| Imágenes | Spotify Web API con *client credentials* |
+| Despliegue | Una imagen Docker; Spring Boot sirve la web y la API desde el mismo origen |
+
+La web sigue una estructura por capas:
+
+- `web/src/model/`: el tipo `Play`, una reproducción del historial.
+- `web/src/services/`: lectura de los JSON y cálculos (tops, hábitos, saltos, períodos, línea de tiempo). Sin React.
+- `web/src/ui/`: pantallas y componentes.
+
+El servidor expone `POST /api/images/albums` y `POST /api/images/artists`, que reciben URIs de canciones y devuelven sus imágenes:
+
+- `controller/`: los endpoints.
+- `service/`: busca la imagen de cada canción, álbum o artista.
+- `client/`: llamadas a la Spotify Web API.
+
+Sin el servidor la app funciona igual, solo que sin imágenes.
+
+## Desarrollo
+
+**Requisitos:** Node 22 y JDK 21. Para las imágenes, una app en el [panel de desarrolladores de Spotify](https://developer.spotify.com/dashboard) con su *client id* y *client secret*.
+
+Crea `server/.env` (no se sube al repositorio ni entra en la imagen):
 
 ```
-cd web
-npm install
-npm run dev
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
 ```
 
-Tests: `npm test` (inside `web/`).
+```bash
+# Servidor de imágenes en localhost:8080
+cd server && ./mvnw spring-boot:run
 
-## Images (optional)
-
-Album and artist images come from a small Spring Boot server that asks the Spotify Web API. Without it the stats still work, just without images.
-
-Create an app at https://developer.spotify.com/dashboard to get a client id and secret, then:
-
-```
-cd server
-SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=... ./mvnw spring-boot:run
+# Web en localhost:5173; reenvía /api al servidor
+cd web && npm install && npm run dev
 ```
 
-It listens on `localhost:8080`; `npm run dev` forwards `/api` to it. If the web runs in WSL and the server on Windows, enable `networkingMode=mirrored` in `.wslconfig` so both share `localhost`.
+| Comando | Dónde | Qué hace |
+| --- | --- | --- |
+| `npm test` | `web/` | Pruebas de servicios y componentes |
+| `npm run lint` | `web/` | Lint con oxlint |
+| `npm run build` | `web/` | Comprobación de tipos y build de producción |
+| `./mvnw test` | `server/` | Pruebas del servidor |
 
-Tests: `./mvnw test` (inside `server/`).
+Si la web corre en WSL y el servidor en Windows, activa `networkingMode=mirrored` en `.wslconfig` para que ambos compartan `localhost`.
 
-## Docker
+## Despliegue
 
-One image runs everything: Spring Boot serves the web app and the `/api` endpoints from the same address.
+### Docker
 
-```
+Una sola imagen lo ejecuta todo: construye la web, la incluye en el jar y Spring Boot la sirve junto a `/api`. Corre como usuario sin privilegios sobre un JRE Alpine.
+
+```bash
 docker build -t spotify-stats .
 docker run -p 8080:8080 --env-file server/.env spotify-stats
 ```
 
-Then open http://localhost:8080. `server/.env` holds `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`; it is never copied into the image.
+Luego abre http://localhost:8080.
 
-## Deploy on Render
+### Render
 
-1. New → **Web Service** → connect this repository. Render detects the `Dockerfile` at the root.
-2. Add the environment variables `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`.
-3. Deploy. Render sets `PORT` and the server listens on it.
+1. New → **Web Service** → conecta este repositorio. Render detecta el `Dockerfile` de la raíz.
+2. Añade las variables de entorno `SPOTIFY_CLIENT_ID` y `SPOTIFY_CLIENT_SECRET`.
+3. Despliega. Render define `PORT` y el servidor escucha en ese puerto.
 
-On the free plan the service sleeps after 15 minutes without visits, so the first visit after that takes about a minute.
+En el plan gratuito el servicio se duerme tras 15 minutos sin visitas, así que la primera visita después tarda cerca de un minuto.
+
+## Autor
+
+[**Julian David Bocanegra Segura**](https://github.com/Julian049): producto, diseño y desarrollo.
+
+Spotify Stats no está afiliado a Spotify. Spotify es una marca registrada de Spotify AB.
