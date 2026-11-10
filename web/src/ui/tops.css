@@ -109,90 +109,121 @@
   font-weight: 700;
 }
 
-.month-rail {
+/* Both rows scroll together, so each month stays under the same month of the other row. */
+.month-rows {
   display: flex;
-  gap: 16px;
+  flex-direction: column;
+  gap: 24px;
   overflow-x: auto;
-  padding: 4px 0 16px;
-  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+}
+
+.month-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: max-content;
+  min-width: 100%;
+}
+
+.month-row-label {
+  position: sticky;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.88px;
+  text-transform: uppercase;
+}
+
+.mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--green);
+}
+
+.mark.round {
+  border-radius: 50%;
+}
+
+.month-cards {
+  display: flex;
+  gap: 14px;
 }
 
 .month-card {
-  flex: 0 0 256px;
+  flex: 1 0 172px;
+  max-width: 220px;
   min-width: 0; /* a long one-line title must be cut with "…", not widen the card */
-  padding: 16px 16px 20px;
+  padding: 12px;
   border-radius: var(--radius);
   background: var(--surface-2);
-  scroll-snap-align: start;
-}
-
-.month-card.peak {
-  outline: 1px solid rgba(30, 215, 96, 0.35);
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .month-card-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
 }
 
 .month-chip {
-  padding: 4px 10px;
-  border-radius: 9999px;
+  padding: 3px 8px;
+  border-radius: 999px;
   background: var(--surface);
-  font-size: 13px;
-  line-height: 16px;
+  font-size: 11px;
+  line-height: 13px;
   font-weight: 600;
 }
 
-.peak .month-chip {
+.month-chip.peak {
   background: var(--green);
-  color: var(--green-ink);
+  color: #000;
 }
 
-.month-hours {
+.month-hours,
+.month-sub {
   color: var(--text-2);
   font-size: 11px;
   line-height: 14px;
-  font-weight: 600;
 }
 
-.peak .month-hours {
-  color: var(--green-2);
-  font-weight: 700;
+.month-sub {
+  font-size: 12px;
+  line-height: 15px;
+}
+
+.month-sub.green {
+  color: var(--green);
 }
 
 .month-art {
-  position: relative;
-  margin-bottom: 12px;
-}
-
-.month-art .artwork {
   width: 100%;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-.top-chip {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
-  font-size: 11px;
-  line-height: 14px;
-  font-weight: 600;
+.month-card.artist .month-art {
+  width: 96px;
+  align-self: center;
+  border-radius: 50%;
 }
 
-.month-artist {
-  font-size: 16px;
+.month-title {
+  font-size: 14px;
+  line-height: 17px;
   font-weight: 700;
+}
+
+.month-card.artist .month-title,
+.month-card.artist .month-sub {
+  text-align: center;
 }
 
 /* Album rail */
@@ -373,7 +404,7 @@
 
 @media (max-width: 1100px) {
   .podium {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr); /* plain 1fr grows with long one-line names */
   }
 }
 
@@ -394,10 +425,6 @@
 
   .area-hours {
     display: none;
-  }
-
-  .month-card {
-    flex-basis: 220px;
   }
 
   .rank-list {
