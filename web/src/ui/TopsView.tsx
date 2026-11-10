@@ -1,9 +1,7 @@
 import { useLayoutEffect, useState, type ReactNode } from 'react'
-import award from '../assets/icons/award.svg'
 import chevronLeft from '../assets/icons/chevron-left.svg'
 import chevronRight from '../assets/icons/chevron-right.svg'
 import headphones from '../assets/icons/headphones.svg'
-import medal from '../assets/icons/medal.svg'
 import note from '../assets/icons/note.svg'
 import timeline from '../assets/icons/timeline.svg'
 import users from '../assets/icons/users.svg'
@@ -38,7 +36,10 @@ export default function TopsView({ plays, periodBar, onLoading }: Props) {
   const artists = top(plays, 'artist', artistMetric, 10)
   const songs = top(plays, 'track', songMetric, 10)
 
-  const { images: artistImages, loading: artistsLoading } = useImages('artists', artists.map((a) => a.uri))
+  const { images: artistImages, loading: artistsLoading } = useImages('artists', [
+    ...[...monthArtists.values()].map((m) => m.uri),
+    ...artists.map((a) => a.uri),
+  ])
   const { images: albumImages, loading: albumsLoading } = useImages('albums', [
     ...[...monthAlbums.values()].map((m) => m.uri),
     ...albums.map((a) => a.uri),
@@ -98,32 +99,26 @@ export default function TopsView({ plays, periodBar, onLoading }: Props) {
 
         <AreaChart months={months} peakMonth={peak?.month} />
 
-        <div className="month-rail">
-          {months.map((m) => {
-            const artist = monthArtists.get(m.month)
-            const album = monthAlbums.get(m.month)
-            const isPeak = m.month === peak?.month
-            return (
-              <article key={m.month} className={`month-card${isPeak ? ' peak' : ''}`}>
-                <div className="month-card-head">
-                  <span className="month-chip">
-                    {monthLabel(m.month)}
-                    {isPeak && ' · Récord'}
-                  </span>
-                  <span className="month-hours">{hours(m.ms)} h</span>
-                </div>
-                <div className="month-art">
-                  <Artwork src={image(albumImages, album?.uri ?? null)} name={album?.title ?? ''} />
-                  <span className="top-chip">
-                    <img src={isPeak ? award : medal} alt="" width={isPeak ? 9 : 6} height={12} />
-                    {isPeak ? 'Pico' : 'Top 1'}
-                  </span>
-                </div>
-                <p className="month-artist ellipsis">{artist?.title}</p>
-                <p className="muted ellipsis">{album?.title}</p>
-              </article>
-            )
-          })}
+        <div className="month-rows">
+          <MonthRow
+            label="Artista del mes"
+            round
+            months={months}
+            peakMonth={peak?.month}
+            item={(month) => {
+              const a = monthArtists.get(month)
+              return a && { title: a.title, ms: a.ms, src: image(artistImages, a.uri) }
+            }}
+          />
+          <MonthRow
+            label="Álbum del mes"
+            months={months}
+            peakMonth={peak?.month}
+            item={(month) => {
+              const a = monthAlbums.get(month)
+              return a && { title: a.title, subtitle: a.artist ?? '', ms: a.ms, src: image(albumImages, a.uri) }
+            }}
+          />
         </div>
       </section>
 
@@ -180,6 +175,45 @@ export default function TopsView({ plays, periodBar, onLoading }: Props) {
         />
       </section>
     </main>
+  )
+}
+
+type MonthItem = { title: string; subtitle?: string; ms: number; src?: string }
+
+// One row of month cards: the artist row has round photos, the album row square covers and the artist below.
+function MonthRow(props: {
+  label: string
+  months: { month: string; ms: number }[]
+  peakMonth?: string
+  item: (month: string) => MonthItem | undefined
+  round?: boolean
+}) {
+  const { label, months, peakMonth, item, round } = props
+  return (
+    <div className="month-row">
+      <p className="month-row-label">
+        <span className={round ? 'mark round' : 'mark'} aria-hidden="true" />
+        {label}
+      </p>
+      <div className="month-cards">
+        {months.map((m) => {
+          const it = item(m.month)
+          const isPeak = m.month === peakMonth
+          return (
+            <article key={m.month} className={`month-card${round ? ' artist' : ''}`}>
+              <div className="month-card-head">
+                <span className={`month-chip${isPeak ? ' peak' : ''}`}>{monthLabel(m.month)}</span>
+                <span className="month-hours">{hours(m.ms)} h</span>
+              </div>
+              <Artwork className="month-art" src={it?.src} name={it?.title ?? ''} />
+              <p className="month-title ellipsis">{it?.title}</p>
+              {it?.subtitle && <p className="month-sub ellipsis">{it.subtitle}</p>}
+              <p className={`month-sub${isPeak && !round ? ' green' : ''}`}>{it ? hours(it.ms) : 0} h escuchadas</p>
+            </article>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
